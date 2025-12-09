@@ -1,8 +1,3 @@
-services:
-  - type: web
-    name: telegrambot
-    env: python
-    runtime:
-      pythonVersion: 3.11
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python3 bot.py"
+runtime: python3
+build:
+  pythonVersion: 3.11
