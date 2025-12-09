@@ -1,1 +1,3 @@
-from imghdr_pure import what
+def what(file, h=None):
+    return None
+
