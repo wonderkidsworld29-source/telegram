@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: python
+    plan: free
+    region: oregon
+
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python3 bot.py"
+
+    envVars:
+      - key: TOKEN
+        value: "8573280925:AAHlT2QIZTvFbFyV4YgGR56cuz_-4ld-Yy4"
+
+      - key: CHAT_ID
+        value: "-1002659872445"
+
+    runtime:
+      pythonVersion: 3.11
