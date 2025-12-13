@@ -1,19 +1,20 @@
 import os
-import asyncio
+import time
 import datetime
-from telegram import Update
+from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler
 
-
 # ===========================
-#  CONFIGURATION
+# CONFIGURATION
 # ===========================
 TOKEN = "8573280925:AAHlT2QIZTvFbFyV4YgGR56cuz_-4ld-Yy4"
 CHAT_ID = -1002659872445
-BASE_PATH = "images"  # Images folder
+BASE_PATH = "images"   # images folder ka naam
+
+bot = Bot(token=TOKEN)
 
 # ===========================
-#  MESSAGES & IMAGES
+# MESSAGES & IMAGES (PURE – NO SKIP)
 # ===========================
 MESSAGES = [
     (
@@ -131,7 +132,6 @@ Make your first deposit on WR777 and receive instant rewards up to ₹5777! 🎁
 
 📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
 """,
-    
         "photo5.jpg"
     ),
     (
@@ -245,63 +245,42 @@ Rewards credited instantly
 ]
 
 # ===========================
-#  SCHEDULER FUNCTION
+# DAILY SCHEDULER (08:00 AM)
 # ===========================
-async def scheduler(app):
-    last_run_date = None
+def auto_scheduler():
+    last_date = None
     while True:
-        now_time = datetime.datetime.now()
-        now_str = now_time.strftime("%H:%M")
-        today = now_time.date()
-
-        # Run at 08:00 only once per day
-        if now_str == "08:00" and last_run_date != today:
-            print("🎉 Starting auto-schedule...")
-
-            for idx, (text, photo) in enumerate(MESSAGES):
-                photo_path = os.path.join(BASE_PATH, photo)
-
+        now = datetime.datetime.now()
+        if now.strftime("%H:%M") == "08:00" and last_date != now.date():
+            for text, photo in MESSAGES:
+                path = os.path.join(BASE_PATH, photo)
                 try:
-                    if os.path.exists(photo_path):
-                        with open(photo_path, "rb") as f:
-                            await app.bot.send_photo(
-                                chat_id=CHAT_ID,
-                                photo=f,
-                                caption=text
-                            )
+                    if os.path.exists(path):
+                        with open(path, "rb") as img:
+                            bot.send_photo(chat_id=CHAT_ID, photo=img, caption=text)
                     else:
-                        await app.bot.send_message(chat_id=CHAT_ID, text=text)
-
-                    print(f"✔ Sent message {idx+1}")
-
+                        bot.send_message(chat_id=CHAT_ID, text=text)
+                    time.sleep(1800)  # 30 min gap
                 except Exception as e:
                     print("SEND ERROR:", e)
-
-                if idx != len(MESSAGES) - 1:
-                    await asyncio.sleep(60 * 30)  # 30 min gap between messages
-
-            last_run_date = today
-            print("🎉 Completed all 10 messages for today!")
-
-        await asyncio.sleep(60)  # Check every 1 min
+            last_date = now.date()
+        time.sleep(60)
 
 # ===========================
-#  /start COMMAND
+# START COMMAND
 # ===========================
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔥 Bot is running 24/7 on Render with schedule!")
+def start(update: Update, context):
+    update.message.reply_text("🔥 Bot is running 24/7 on Render (Stable Version)")
 
 # ===========================
-#  MAIN BOT
+# MAIN
 # ===========================
-async def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-
-    # Run scheduler in background
-    asyncio.create_task(scheduler(app))
-
-    await app.run_polling()
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start", start))
+    updater.start_polling()
+    auto_scheduler()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
