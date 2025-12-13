@@ -2,7 +2,8 @@ import os
 import asyncio
 import datetime
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Updater, CommandHandler
+
 
 # ===========================
 #  CONFIGURATION
