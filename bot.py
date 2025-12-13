@@ -1,21 +1,20 @@
 import os
 import time
 import datetime
+import asyncio
 from telegram import Bot, Update
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# ===========================
-# CONFIGURATION
-# ===========================
+# =========================
+# CONFIG
+# =========================
 TOKEN = "8573280925:AAHlT2QIZTvFbFyV4YgGR56cuz_-4ld-Yy4"
 CHAT_ID = -1002659872445
-BASE_PATH = "images"   # images folder ka naam
+BASE_PATH = "images"
 
-bot = Bot(token=TOKEN)
-
-# ===========================
-# MESSAGES & IMAGES (PURE – NO SKIP)
-# ===========================
+# =========================
+# PURE MESSAGES (NO SKIP)
+# =========================
 MESSAGES = [
     (
         """👍👍👍👍👍👍👍👍👍
@@ -244,43 +243,44 @@ Rewards credited instantly
     ),
 ]
 
-# ===========================
-# DAILY SCHEDULER (08:00 AM)
-# ===========================
-def auto_scheduler():
+bot = Bot(token=TOKEN)
+
+# =========================
+# AUTO SCHEDULER
+# =========================
+async def auto_scheduler():
     last_date = None
     while True:
         now = datetime.datetime.now()
         if now.strftime("%H:%M") == "08:00" and last_date != now.date():
             for text, photo in MESSAGES:
-                path = os.path.join(BASE_PATH, photo)
                 try:
+                    path = os.path.join(BASE_PATH, photo)
                     if os.path.exists(path):
                         with open(path, "rb") as img:
-                            bot.send_photo(chat_id=CHAT_ID, photo=img, caption=text)
+                            await bot.send_photo(chat_id=CHAT_ID, photo=img, caption=text)
                     else:
-                        bot.send_message(chat_id=CHAT_ID, text=text)
-                    time.sleep(1800)  # 30 min gap
+                        await bot.send_message(chat_id=CHAT_ID, text=text)
+                    await asyncio.sleep(1800)  # 30 min gap
                 except Exception as e:
                     print("SEND ERROR:", e)
             last_date = now.date()
-        time.sleep(60)
+        await asyncio.sleep(60)
 
-# ===========================
-# START COMMAND
-# ===========================
-def start(update: Update, context):
-    update.message.reply_text("🔥 Bot is running 24/7 on Render (Stable Version)")
+# =========================
+# COMMAND
+# =========================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🔥 Bot is running (Stable v20)")
 
-# ===========================
+# =========================
 # MAIN
-# ===========================
-def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    updater.start_polling()
-    auto_scheduler()
+# =========================
+async def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    asyncio.create_task(auto_scheduler())
+    await app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
