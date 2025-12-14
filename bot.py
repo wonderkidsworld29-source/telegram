@@ -1,23 +1,25 @@
 import os
-import time
-import datetime
 import asyncio
-from telegram import Bot, Update
+import datetime
+from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # =========================
-# CONFIG
+# CONFIG (ENV ONLY)
 # =========================
-TOKEN = "8573280925:AAHlT2QIZTvFbFyV4YgGR56cuz_-4ld-Yy4"
-CHAT_ID = -1002659872445
+TOKEN = os.getenv("TOKEN")
+CHAT_ID = int(os.getenv("CHAT_ID"))
 BASE_PATH = "images"
 
+bot = None  # will be set in main()
+
 # =========================
-# PURE MESSAGES (NO SKIP)
+# ALL MESSAGES (NO SKIP)
 # =========================
 MESSAGES = [
-    (
-        """👍👍👍👍👍👍👍👍👍
+
+(
+"""👍👍👍👍👍👍👍👍👍
 
 👉 Win Up To ₹9999 Daily on WR777! 🎉
 
@@ -28,7 +30,7 @@ MESSAGES = [
 ✅ Big rewards, instant wins 🪙
 
 💎 Why everyone loves WR777:
-✅ 100% Safe 🔓 
+✅ 100% Safe 🔓
 ✅ Fast Deposit/Withdrawal ⚡️
 ✅ 24/7 Online Support ⏰
 
@@ -38,212 +40,132 @@ MESSAGES = [
 👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
 
 📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo1.jpg"
-    ),
-    (
-        """🎉GET ₹500 FREE on 🚩🚩🚩‼️
+""","photo1.jpg"),
+
+(
+"""🎉GET ₹500 FREE on 🚩🚩🚩‼️
 
 Spin the Lucky Wheel and win exciting cash rewards instantly!
 
 🎰 Feeling Lucky?
 Join WR777 today and enjoy 1️⃣ Free Spin — win up to ₹500 on the spot!
-Every spin gives you a chance to grab cash, coins, or bonus rewards!
 
 🔥 How to Get Your Free ₹500:
-1️⃣ Register on WR777
-2️⃣ Use your FREE SPIN
-3️⃣ Win cash instantly
-4️⃣ Invite friends to earn more!
+1️⃣ Register
+2️⃣ Use FREE SPIN
+3️⃣ Win instantly
+4️⃣ Invite friends
 
-✅ Free Spin Rewards
 ✅ Up to ₹500 Free
-✅ 100% Safe & Trusted
-✅ Fast Deposit/Withdrawal
-✅ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
+✅ 100% Safe
+✅ Fast Withdrawal
+✅ 24/7 Support
 
 📱 Download link - https://invite.wr777.club/?code=UMraTJ7PS
-""",
-        "photo2.jpg"
-    ),
-    (
-        """🏦 Bank Delay? Don’t Worry — WR777 Pays You! 💰
+""","photo2.jpg"),
 
-WR777 offers up to ₹399 compensation whenever your bank withdrawal is delayed.
+(
+"""🏦 Bank Delay? Don’t Worry — WR777 Pays You! 💰
 
-💰 Compensation Chart (Based on delay & withdrawal amount):
+Compensation up to ₹399 on withdrawal delay.
+
 🛡 ₹100–₹999 → ₹9 / ₹19 / ₹39
 🛡 ₹1000–₹4999 → ₹19 / ₹39 / ₹99
 🛡 ₹5000–₹50000 → ₹99 / ₹199 / ₹399
 
-☄️ Fast Deposit & Withdrawal
-🔒 100% Safe
-⏰ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
+🔒 Safe | ⚡ Fast | ⏰ 24/7 Support
 
 📱 Download link - https://invite.wr777.club/?code=3UIHYPS
-""",
-        "photo3.jpg"
-    ),
-    (
-        """💰 Get High Bonuses on Your First Deposit! 💰
+""","photo3.jpg"),
 
-Make your first deposit on WR777 and receive instant rewards up to ₹5777! 🎁
+(
+"""💰 Get High Bonuses on First Deposit!
 
-💰 Bonus Examples:
-💱 Deposit ₹100 → Get ₹37
-💱 Deposit ₹1000 → Get ₹177
-💱 Deposit ₹5000 → Get ₹777
-💱 Deposit ₹50000 → Get ₹5777 
+💱 ₹100 → ₹37
+💱 ₹1000 → ₹177
+💱 ₹5000 → ₹777
+💱 ₹50000 → ₹5777
 
-✔️ Fast Deposit & Withdrawal 💥
-✔️ 100% Safe & Trusted 🆒
-✔️ 24/7 Online Support ⏰
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
+✔️ Instant bonus
+✔️ Fast withdrawal
+✔️ 24/7 Support
 
 📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo4.jpg"
-    ),
-    (
-        """🔔 Free Bonus ₹188 — Just Share on Social Media! 🔔
+""","photo4.jpg"),
 
-📲 Share WR777 and get a free ₹188 bonus! ✅
+(
+"""🔔 Free Bonus ₹188 — Just Share!
 
-⏰ How to Claim:
-➡️ Share → Wait 2 hours → Contact Customer Service
-➡️ You can claim once every day
-➡️ Activity Time: 08:00 - 22:00
+📲 Share → wait 2 hrs → contact support
+⏰ Once per day (08:00–22:00)
 
 💎 100% Safe
-🌟 Fast Deposit/Withdrawal
-🕒 24/7 Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
+⚡ Fast Withdrawal
 
 📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo5.jpg"
-    ),
-    (
-        """🔔 Enjoy Bonus on Every Deposit! 💱
+""","photo5.jpg"),
 
-Deposit anytime on WR777 and get an instant extra bonus added to your balance — unlimited times!
+(
+"""🔔 Bonus on EVERY Deposit!
 
-💰 More deposits = more bonus
-⚡️ Fast Deposit & Withdrawal
-🔓 100% Safe & Trusted
-⏰ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
-
-📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo6.jpg"
-    ),
-    (
-        """⭐⭐ Easy UPI Deposit Guide (WR777)
-
-Follow these 4 simple steps to deposit quickly:
-1️⃣ Screenshot the QR
-2️⃣ Open PhonePe → Tap Scan
-3️⃣ Select Upload QR → Choose your screenshot
-4️⃣ Complete payment → Copy the UPI Ref No and submit
-
-💯 100% Safe
-💎 Fast Deposit/Withdrawal
-⏰ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
-
-📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo7.jpg"
-    ),
-    (
-        """👑 Unlock Elite VIP Rewards at WR777! 👑
-
-🎆 Level up your tier and enjoy weekly bonuses, upgrade rewards, and free daily withdrawals — up to ₹59,999 when you reach VIP!
-
-✅ VIP Benefits Include:
-➡️ Weekly Bonus up to ₹1,777
-➡️ Level Upgrade Bonus up to ₹59,999
-➡️ Free Withdrawals: 2–10 times daily
-➡️ Exclusive Monday VIP Rewards
-
-🔒 100% Safe
-☄️ Fast Deposit/Withdrawal
-⏰ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
-
-📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo8.jpg"
-    ),
-    (
-        """🔗 Invite Friends & Earn Up to ₹15,000/Month! ✨
-
-Earn money daily just by sharing your WR777 invite link! 🎁
-
-💸 Rewards:
-🟠 You get ₹50 per invite
-🟠 Your friend gets ₹20
-🟠 Up to 10 invites/day = ₹500 daily
-
-📌 How to Join:
-1️⃣ Register on WR777 📲
-2️⃣ Share your invite link 😀
-3️⃣ Friend registers + deposits ₹100 🎉
-
-Rewards credited instantly
-
-🔒 💯 Safe | ⚡ Fast Withdrawal | ⏰ 24/7 Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
-
-📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo9.jpg"
-    ),
-    (
-        """🔗 Become an Agent & Start Earning with WR777! 💎
-
-🔔 Build your own team and earn commissions from 3 levels of sub-agents — bigger network = bigger income!
-
-💼 Commission Rates:
-✅ LV1 Subordinates: 0.30% – 0.70%
-✅ LV2 Subordinates: 0.15% – 0.25%
-✅ LV3 Subordinates: 0.07% – 0.15%
-
-➡️ Earn daily, weekly, monthly passive income with zero investment!
-
+💰 Unlimited bonus
+⚡ Fast deposit/withdrawal
 🔓 100% Safe
-⚡️ Fast Deposit/Withdrawal
-⏰ 24/7 Online Support
-
-☁️ Online Customer Service (https://wr777cs.com/)
-👍 Telegram Customer Service (https://t.me/WR777CUSTOMERSERVICE)
+⏰ 24/7 Support
 
 📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
-""",
-        "photo10.jpg"
-    ),
-]
+""","photo6.jpg"),
 
-bot = Bot(token=TOKEN)
+(
+"""⭐⭐ Easy UPI Deposit Guide
+
+1️⃣ Screenshot QR
+2️⃣ PhonePe → Scan
+3️⃣ Upload QR
+4️⃣ Pay & submit UPI Ref
+
+💯 Safe | ⚡ Fast | ⏰ 24/7
+
+📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
+""","photo7.jpg"),
+
+(
+"""👑 VIP Rewards Unlocked!
+
+➡️ Weekly bonus ₹1,777
+➡️ Upgrade bonus ₹59,999
+➡️ Free withdrawals daily
+
+🔒 Safe | ⚡ Fast | ⏰ 24/7
+
+📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
+""","photo8.jpg"),
+
+(
+"""🔗 Invite Friends & Earn ₹15,000/month!
+
+🟠 ₹50 per invite
+🟠 Friend gets ₹20
+🟠 10 invites/day = ₹500
+
+📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
+""","photo9.jpg"),
+
+(
+"""🔗 Become an Agent & Earn Big!
+
+LV1: 0.30%–0.70%
+LV2: 0.15%–0.25%
+LV3: 0.07%–0.15%
+
+💰 Passive income
+⚡ Fast payout
+🔒 100% Safe
+
+📱 Download link - https://invite.wr777.club/?code=UMTJ7PS
+""","photo10.jpg"),
+
+]
 
 # =========================
 # AUTO SCHEDULER
@@ -271,15 +193,19 @@ async def auto_scheduler():
 # COMMAND
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔥 Bot is running (Stable v20)")
+    await update.message.reply_text("🔥 Bot running (Railway stable)")
 
 # =========================
 # MAIN
 # =========================
 async def main():
+    global bot
     app = ApplicationBuilder().token(TOKEN).build()
+    bot = app.bot
+
     app.add_handler(CommandHandler("start", start))
     asyncio.create_task(auto_scheduler())
+
     await app.run_polling()
 
 if __name__ == "__main__":
